@@ -10,42 +10,41 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
       chat_bookmarks: {
         Row: {
-          content: string
-          conversation_id: string
           created_at: string
           id: string
-          message_id: string
+          message_id: string | null
           note: string | null
-          role: string
           user_id: string
         }
         Insert: {
-          content: string
-          conversation_id: string
           created_at?: string
           id?: string
-          message_id: string
+          message_id?: string | null
           note?: string | null
-          role: string
           user_id: string
         }
         Update: {
-          content?: string
-          conversation_id?: string
           created_at?: string
           id?: string
-          message_id?: string
+          message_id?: string | null
           note?: string | null
-          role?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_bookmarks_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_conversations: {
         Row: {
@@ -85,24 +84,27 @@ export type Database = {
       chat_messages: {
         Row: {
           content: string
-          conversation_id: string
+          conversation_id: string | null
           created_at: string
           id: string
           role: string
+          user_id: string
         }
         Insert: {
           content: string
-          conversation_id: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           role: string
+          user_id: string
         }
         Update: {
           content?: string
-          conversation_id?: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           role?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -114,53 +116,32 @@ export type Database = {
           },
         ]
       }
-      custom_roles: {
-        Row: {
-          color: string
-          created_at: string
-          description: string
-          id: string
-          is_system: boolean
-          name: string
-        }
-        Insert: {
-          color?: string
-          created_at?: string
-          description?: string
-          id?: string
-          is_system?: boolean
-          name: string
-        }
-        Update: {
-          color?: string
-          created_at?: string
-          description?: string
-          id?: string
-          is_system?: boolean
-          name?: string
-        }
-        Relationships: []
-      }
       document_folders: {
         Row: {
+          color: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           domain_id: string | null
           id: string
           name: string
           updated_at: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           domain_id?: string | null
           id?: string
           name: string
           updated_at?: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           domain_id?: string | null
           id?: string
           name?: string
@@ -176,57 +157,152 @@ export type Database = {
           },
         ]
       }
+      document_revisions: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          note: string | null
+          previous_file_path: string
+          previous_file_size: number
+          previous_file_type: string
+          replaced_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          note?: string | null
+          previous_file_path: string
+          previous_file_size: number
+          previous_file_type: string
+          replaced_by?: string | null
+          version: number
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          note?: string | null
+          previous_file_path?: string
+          previous_file_size?: number
+          previous_file_type?: string
+          replaced_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_revisions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_tag_assignments: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_tag_assignments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "document_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
-          ai_ready: boolean
-          content_text: string | null
+          category: Database["public"]["Enums"]["document_category"] | null
+          content: string | null
           created_at: string
           description: string | null
           domain_id: string | null
-          file_name: string
           file_path: string
           file_size: number
           file_type: string
           folder_id: string | null
           id: string
-          title: string
+          name: string
           updated_at: string
           uploaded_by: string | null
-          version: number
         }
         Insert: {
-          ai_ready?: boolean
-          content_text?: string | null
+          category?: Database["public"]["Enums"]["document_category"] | null
+          content?: string | null
           created_at?: string
           description?: string | null
           domain_id?: string | null
-          file_name: string
           file_path: string
-          file_size?: number
-          file_type?: string
+          file_size: number
+          file_type: string
           folder_id?: string | null
           id?: string
-          title: string
+          name: string
           updated_at?: string
           uploaded_by?: string | null
-          version?: number
         }
         Update: {
-          ai_ready?: boolean
-          content_text?: string | null
+          category?: Database["public"]["Enums"]["document_category"] | null
+          content?: string | null
           created_at?: string
           description?: string | null
           domain_id?: string | null
-          file_name?: string
           file_path?: string
           file_size?: number
           file_type?: string
           folder_id?: string | null
           id?: string
-          title?: string
+          name?: string
           updated_at?: string
           uploaded_by?: string | null
-          version?: number
         }
         Relationships: [
           {
@@ -247,36 +323,36 @@ export type Database = {
       }
       domains: {
         Row: {
-          abbreviation: string
-          color: string
+          abbreviation: string | null
+          color: string | null
           created_at: string
-          icon: string
+          description: string | null
+          display_order: number | null
           id: string
           name: string
           slug: string
-          sort_order: number
           updated_at: string
         }
         Insert: {
-          abbreviation: string
-          color?: string
+          abbreviation?: string | null
+          color?: string | null
           created_at?: string
-          icon?: string
+          description?: string | null
+          display_order?: number | null
           id?: string
           name: string
           slug: string
-          sort_order?: number
           updated_at?: string
         }
         Update: {
-          abbreviation?: string
-          color?: string
+          abbreviation?: string | null
+          color?: string | null
           created_at?: string
-          icon?: string
+          description?: string | null
+          display_order?: number | null
           id?: string
           name?: string
           slug?: string
-          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -285,124 +361,153 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
-          email: string | null
-          full_name: string | null
+          domain_id: string | null
+          email: string
+          full_name: string
           id: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
+          domain_id?: string | null
+          email: string
+          full_name: string
+          id?: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
-          full_name?: string | null
+          domain_id?: string | null
+          email?: string
+          full_name?: string
           id?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      site_settings: {
-        Row: {
-          id: string
-          key: string
-          updated_at: string
-          updated_by: string | null
-          value: Json
-        }
-        Insert: {
-          id?: string
-          key: string
-          updated_at?: string
-          updated_by?: string | null
-          value?: Json
-        }
-        Update: {
-          id?: string
-          key?: string
-          updated_at?: string
-          updated_by?: string | null
-          value?: Json
-        }
-        Relationships: []
-      }
-      user_ai_settings: {
-        Row: {
-          created_at: string
-          gemini_api_key: string | null
-          id: string
-          updated_at: string
-          use_personal_key: boolean
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          gemini_api_key?: string | null
-          id?: string
-          updated_at?: string
-          use_personal_key?: boolean
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          gemini_api_key?: string | null
-          id?: string
-          updated_at?: string
-          use_personal_key?: boolean
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_custom_roles: {
-        Row: {
-          assigned_at: string
-          custom_role_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          assigned_at?: string
-          custom_role_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          assigned_at?: string
-          custom_role_id?: string
-          id?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_custom_roles_custom_role_id_fkey"
-            columns: ["custom_role_id"]
+            foreignKeyName: "profiles_domain_id_fkey"
+            columns: ["domain_id"]
             isOneToOne: false
-            referencedRelation: "custom_roles"
+            referencedRelation: "domains"
             referencedColumns: ["id"]
           },
         ]
       }
+      quick_questions: {
+        Row: {
+          created_at: string
+          display_order: number
+          domain_id: string | null
+          id: string
+          is_active: boolean
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          domain_id?: string | null
+          id?: string
+          is_active?: boolean
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          domain_id?: string | null
+          id?: string
+          is_active?: boolean
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_questions_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_nav_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          nav_key: string
+          role_slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nav_key: string
+          role_slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nav_key?: string
+          role_slug?: string
+        }
+        Relationships: []
+      }
+      roles: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_system: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_domains: {
         Row: {
-          assigned_at: string
+          created_at: string
           domain_id: string
           id: string
           user_id: string
         }
         Insert: {
-          assigned_at?: string
+          created_at?: string
           domain_id: string
           id?: string
           user_id: string
         }
         Update: {
-          assigned_at?: string
+          created_at?: string
           domain_id?: string
           id?: string
           user_id?: string
@@ -417,47 +522,23 @@ export type Database = {
           },
         ]
       }
-      user_quick_questions: {
-        Row: {
-          created_at: string
-          domain_key: string
-          id: string
-          questions: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          domain_key: string
-          id?: string
-          questions?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          domain_key?: string
-          id?: string
-          questions?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
+          created_at: string
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: string
           user_id?: string
         }
         Relationships: []
@@ -467,16 +548,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | { Args: { _role: string; _user_id: string }; Returns: boolean }
+      next_document_revision_version: {
+        Args: { _document_id: string }
+        Returns: number
+      }
+      update_document_content: {
+        Args: { _content: string; _document_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "doctor" | "staff"
+      document_category: "ED" | "BB" | "LAB" | "RAD" | "CLINICAL_AUDIT" | "HQI"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -604,7 +696,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "doctor", "staff"],
+      document_category: ["ED", "BB", "LAB", "RAD", "CLINICAL_AUDIT", "HQI"],
     },
   },
 } as const

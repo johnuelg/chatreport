@@ -1,0 +1,29 @@
+# Static assets with content hashes - cache for 1 year
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Favicons - avoid aggressive caching (some browsers cache favicons for a long time)
+/favicon.ico
+  Cache-Control: no-cache
+/favicon.png
+  Cache-Control: no-cache
+/favicon.webp
+  Cache-Control: no-cache
+
+# Service worker - must revalidate
+/registerSW.js
+  Cache-Control: no-cache
+
+# HTML files should revalidate
+/index.html
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+# Security headers
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
