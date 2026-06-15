@@ -1,0 +1,1 @@
+ALTER TABLE public.domains ADD COLUMN icon text NOT NULL DEFAULT 'activity';

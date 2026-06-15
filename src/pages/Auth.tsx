@@ -69,7 +69,7 @@ export default function Auth() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/dashboard");
+        navigate("/admin/landing");
       }
       setLoading(false);
     });
@@ -78,7 +78,7 @@ export default function Auth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate("/dashboard");
+        navigate("/admin/landing");
       }
     });
 
@@ -111,7 +111,7 @@ export default function Auth() {
     }
 
     toast.success(isArabic ? "تم تسجيل الدخول بنجاح" : "Signed in successfully");
-    navigate("/dashboard");
+    navigate("/admin/landing");
   };
 
   const toggleLanguage = () => {

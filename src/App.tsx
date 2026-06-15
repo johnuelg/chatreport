@@ -1,75 +1,56 @@
-// App entry point with providers and language support
-import { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { DelayedLoadingIndicator } from "@/components/layout/DelayedLoadingIndicator";
-import Auth from "./pages/Auth";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import RoutePermissionGuard from "@/components/admin/RoutePermissionGuard";
+import AdminLanding from "@/components/admin/AdminLanding";
+import Index from "./pages/Index.tsx";
 
-// Lazy load pages that aren't needed on initial Auth page load
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Chat = lazy(() => import("./pages/Chat"));
-const Documents = lazy(() => import("./pages/Documents"));
-const Users = lazy(() => import("./pages/Users"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Bookmarks = lazy(() => import("./pages/Bookmarks"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Index = lazy(() => import("./pages/Index"));
+import ResetPassword from "./pages/ResetPassword.tsx";
+import NotFound from "./pages/NotFound.tsx";
+import AdminDashboard from "./pages/AdminDashboard.tsx";
+import AdminSettings from "./pages/AdminSettings.tsx";
+import AdminUsers from "./pages/AdminUsers.tsx";
+import Auth from "./pages/Auth.tsx";
+import AdminDocuments from "./pages/AdminDocuments.tsx";
+import AdminChat from "./pages/AdminChat.tsx";
+import AdminBookmarks from "./pages/AdminBookmarks.tsx";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 2, // 2 min stale time for faster perceived loads
-      gcTime: 1000 * 60 * 5,    // Keep in cache for 5 minutes
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-// Minimal loading indicator that only shows after 300ms delay
-const PageLoader = () => <DelayedLoadingIndicator delay={300} />;
-
-function AppContent() {
-  return (
-    <>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/bookmarks" element={<Bookmarks />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <ThemeProvider>
+            <LanguageProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/admin/login" element={<Auth />} />
+                <Route path="/admin/landing" element={<AdminLanding />} />
+                <Route path="/admin" element={<RoutePermissionGuard><AdminDashboard /></RoutePermissionGuard>} />
+                <Route path="/admin/settings" element={<RoutePermissionGuard><AdminSettings /></RoutePermissionGuard>} />
+                <Route path="/admin/users" element={<RoutePermissionGuard><AdminUsers /></RoutePermissionGuard>} />
+                <Route path="/admin/documents" element={<RoutePermissionGuard><AdminDocuments /></RoutePermissionGuard>} />
+                <Route path="/admin/chat" element={<RoutePermissionGuard><AdminChat /></RoutePermissionGuard>} />
+                <Route path="/admin/bookmarks" element={<RoutePermissionGuard><AdminBookmarks /></RoutePermissionGuard>} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </LanguageProvider>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
-    </>
-  );
-}
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <LanguageProvider>
-        <TooltipProvider>
-          <AppContent />
-        </TooltipProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

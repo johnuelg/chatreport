@@ -5,8 +5,14 @@ export type Language = "en" | "ar";
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  lang: Language;
+  setLang: (lang: Language) => void;
+  t: {
+    (key: string): string;
+    (section: string, field: string): string;
+  };
   dir: "ltr" | "rtl";
+  isRtl: boolean;
 }
 
 // Keep a stable Context instance across Vite Fast Refresh/HMR.
@@ -380,7 +386,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("app-language", lang);
   };
 
-  const t = (key: string): string => {
+  const t = (keyOrSection: string, field?: string): string => {
+    const key = field ? `${keyOrSection}.${field}` : keyOrSection;
     return translations[language][key] || key;
   };
 
@@ -393,7 +400,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [language, dir]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, dir }}>
+    <LanguageContext.Provider
+      value={{
+        language,
+        setLanguage,
+        lang: language,
+        setLang: setLanguage,
+        t,
+        dir,
+        isRtl: dir === "rtl",
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   );
