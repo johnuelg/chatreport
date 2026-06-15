@@ -1,19 +1,4 @@
-project_id = "hmhxrjudggrzbbhnvvat"
+project_id = "dmnrgpdpqgudqgrrlhjc"
 
-[functions.admin-create-user]
-verify_jwt = false
-
-[functions.admin-delete-user]
-verify_jwt = false
-
-[functions.admin-update-user]
-verify_jwt = false
-
-[functions.chat-perplexity]
-verify_jwt = false
-
-[functions.analyze-image]
-verify_jwt = false
-
-[functions.parse-document]
+[functions.chat-completion]
 verify_jwt = false

@@ -1,114 +1,25 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      // Prevent flash of wrong theme - apply saved theme or default to dark immediately
-      (function() {
-        var theme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(theme);
-      })();
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Taif Children Hospital</title>
-    <meta name="description" content="Taif Children's Hospital">
-    <meta name="author" content="Lovable" />
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>Taif Children&#39;s Hospital – AI Data Platform</title>
+    <meta name="description" content="Conversational AI Data Platform for Taif Children&#39;s Hospital. Chat with your hospital KPI data for instant insights, reports, and analytics.">
+    <meta name="author" content="Taif Children's Hospital" />
+
     
-    <!-- DNS Prefetch & Preconnect for performance -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- Preload critical assets -->
-    <link rel="preload" href="https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaBTMnFcQ.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://fonts.gstatic.com/s/opensans/v44/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS-mu0SC55I.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/src/assets/auth-background.svg" as="image" type="image/svg+xml">
-    
-    <!-- Critical CSS for preventing CLS and FOUC -->
-    <style>
-      /* Prevent layout shift from font loading */
-      html {
-        font-family: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        /* Prevent FOUC - start hidden, shown by React */
-        visibility: visible;
-        opacity: 1;
-      }
-      /* Initial loading state background - dark mode default */
-      body {
-        background-color: hsl(222, 47%, 11%);
-        margin: 0;
-        min-height: 100vh;
-      }
-      html.light body {
-        background-color: hsl(195, 30%, 98%);
-      }
-      /* Font-display swap with size-adjust for minimal CLS */
-      @font-face {
-        font-family: 'Nunito';
-        font-display: swap;
-        size-adjust: 100%;
-        ascent-override: 100%;
-        descent-override: 20%;
-        line-gap-override: 0%;
-      }
-      @font-face {
-        font-family: 'Open Sans';
-        font-display: swap;
-        size-adjust: 105%;
-        ascent-override: 100%;
-        descent-override: 22%;
-        line-gap-override: 0%;
-      }
-      /* Hide root until React hydrates to prevent flash */
-      #root:empty {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-      }
-      #root:empty::before {
-        content: '';
-        width: 40px;
-        height: 40px;
-        border: 3px solid hsl(195, 30%, 90%);
-        border-top-color: hsl(198, 63%, 49%);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-      /* Prevent content jump */
-      * { box-sizing: border-box; }
-    </style>
-    
-    <!-- Load fonts asynchronously with display=swap to prevent render blocking -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
-    
-    <!-- Open Graph & Twitter -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Taif Children Hospital">
-    <meta property="og:description" content="Taif Children's Hospital">
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9f7a65c9-e018-4780-9d36-144e2d8c4d6c/id-preview-f955f8de--f2060459-3335-4b62-b1c0-8c69e4f1f805.lovable.app-1775326297418.png">
+
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:title" content="Taif Children Hospital">
-    <meta name="twitter:description" content="Taif Children's Hospital">
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <!-- Favicon & PWA -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-    <link rel="icon" type="image/webp" href="/favicon.webp">
-    <link rel="shortcut icon" href="/favicon.png" type="image/png">
-    <link rel="apple-touch-icon" href="/pwa-192x192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="TCH">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#2f9acb">
+    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9f7a65c9-e018-4780-9d36-144e2d8c4d6c/id-preview-f955f8de--f2060459-3335-4b62-b1c0-8c69e4f1f805.lovable.app-1775326297418.png">
+    <meta property="og:title" content="Taif Children&#39;s Hospital – AI Data Platform">
+  <meta name="twitter:title" content="Taif Children&#39;s Hospital – AI Data Platform">
+  <meta property="og:description" content="Conversational AI Data Platform for Taif Children&#39;s Hospital. Chat with your hospital KPI data for instant insights, reports, and analytics.">
+  <meta name="twitter:description" content="Conversational AI Data Platform for Taif Children&#39;s Hospital. Chat with your hospital KPI data for instant insights, reports, and analytics.">
 </head>
 
   <body>
