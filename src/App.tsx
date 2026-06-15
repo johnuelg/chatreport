@@ -14,7 +14,7 @@ import NotFound from "./pages/NotFound.tsx";
 import AdminDashboard from "./pages/AdminDashboard.tsx";
 import AdminSettings from "./pages/AdminSettings.tsx";
 import AdminUsers from "./pages/AdminUsers.tsx";
-import AdminLogin from "./pages/AdminLogin.tsx";
+import Auth from "./pages/Auth.tsx";
 import AdminDocuments from "./pages/AdminDocuments.tsx";
 import AdminChat from "./pages/AdminChat.tsx";
 import AdminBookmarks from "./pages/AdminBookmarks.tsx";
@@ -31,9 +31,9 @@ const App = () => (
           <LanguageProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<AdminLogin />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/login" element={<Auth />} />
               <Route path="/admin/landing" element={<AdminLanding />} />
               <Route path="/admin" element={<RoutePermissionGuard><AdminDashboard /></RoutePermissionGuard>} />
               <Route path="/admin/settings" element={<RoutePermissionGuard><AdminSettings /></RoutePermissionGuard>} />
