@@ -218,15 +218,31 @@ const AdminDocuments = () => {
     }
   };
 
-  const handlePreview = (doc: any) => {
-    const { data } = supabase.storage.from("documents").getPublicUrl(doc.file_path);
-    window.open(data.publicUrl, "_blank");
+  const handlePreview = async (doc: any) => {
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(doc.file_path, 60);
+
+    if (error || !data?.signedUrl) {
+      toast({ title: "Preview failed", description: error?.message ?? "Could not generate secure preview link", variant: "destructive" });
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleDownload = (doc: any) => {
-    const { data } = supabase.storage.from("documents").getPublicUrl(doc.file_path);
+  const handleDownload = async (doc: any) => {
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(doc.file_path, 60);
+
+    if (error || !data?.signedUrl) {
+      toast({ title: "Download failed", description: error?.message ?? "Could not generate secure download link", variant: "destructive" });
+      return;
+    }
+
     const a = document.createElement("a");
-    a.href = data.publicUrl;
+    a.href = data.signedUrl;
     a.download = doc.file_name;
     a.click();
   };
