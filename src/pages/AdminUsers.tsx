@@ -28,6 +28,7 @@ import {
 } from "@/hooks/useCustomRoles";
 import { useDomains, type Domain } from "@/hooks/useDomains";
 import { useUserDomains, useAssignDomain, useRemoveDomain } from "@/hooks/useUserDomains";
+import { checkLeakedPassword } from "@/lib/password-security";
 
 interface UserWithRole {
   id: string;
@@ -78,6 +79,8 @@ const AdminUsers = () => {
   const [resetPwValue, setResetPwValue] = useState("");
   const [resetPwShow, setResetPwShow] = useState(false);
   const [resetPwSaving, setResetPwSaving] = useState(false);
+  const [resetPwChecking, setResetPwChecking] = useState(false);
+  const [resetPwError, setResetPwError] = useState<string | null>(null);
 
   // Create form state
   const [createName, setCreateName] = useState("");
@@ -88,6 +91,8 @@ const AdminUsers = () => {
   const [createDomainIds, setCreateDomainIds] = useState<Set<string>>(new Set());
   const [createAllDomains, setCreateAllDomains] = useState(true);
   const [createSaving, setCreateSaving] = useState(false);
+  const [createPwChecking, setCreatePwChecking] = useState(false);
+  const [createPwError, setCreatePwError] = useState<string | null>(null);
 
   const { data: users = [] } = useQuery({
     queryKey: ["admin-users"],
@@ -269,8 +274,28 @@ const AdminUsers = () => {
       toast({ title: "Email and password are required", variant: "destructive" });
       return;
     }
+
+    setCreatePwError(null);
     setCreateSaving(true);
+
     try {
+      setCreatePwChecking(true);
+      const leakedCheck = await checkLeakedPassword(createPassword);
+      setCreatePwChecking(false);
+
+      if (leakedCheck.error) {
+        setCreatePwError(leakedCheck.error);
+        toast({ title: "Password check failed", description: leakedCheck.error, variant: "destructive" });
+        return;
+      }
+
+      if (leakedCheck.isLeaked) {
+        const leakDescription = `This password appears in ${leakedCheck.leakCount.toLocaleString()} known breach records. Please choose a different password.`;
+        setCreatePwError(leakDescription);
+        toast({ title: "Leaked password detected", description: leakDescription, variant: "destructive" });
+        return;
+      }
+
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       const res = await fetch(
@@ -301,6 +326,7 @@ const AdminUsers = () => {
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
+      setCreatePwChecking(false);
       setCreateSaving(false);
     }
   };
