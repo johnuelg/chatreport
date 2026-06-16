@@ -247,9 +247,10 @@ const AdminUsers = () => {
   // Create user helpers
   const generatePassword = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
-    let pw = "";
-    for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
-    setCreatePassword(pw);
+    const randomValues = new Uint32Array(12);
+    crypto.getRandomValues(randomValues);
+    const password = Array.from(randomValues, (value) => chars[value % chars.length]).join("");
+    setCreatePassword(password);
   };
 
   const openCreateDialog = () => {
