@@ -182,6 +182,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (!isAdmin && !domain_id) {
+      return new Response(JSON.stringify({ error: "Forbidden: domain access denied" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (domain_id && !isAdmin) {
       const { data: domainAccess, error: domainAccessError } = await userClient
         .from("user_domains")
@@ -206,6 +213,7 @@ Deno.serve(async (req) => {
     }
 
     const adminClient = createClient(supabaseUrl, serviceKey);
+    const knowledgeClient = isAdmin ? adminClient : userClient;
 
     // Domain name + KB
     let domainName = "All Domains";
@@ -218,7 +226,7 @@ Deno.serve(async (req) => {
       if (dom?.name) domainName = dom.name;
     }
 
-    const kb = await buildKnowledgeBase(adminClient, domain_id);
+    const kb = await buildKnowledgeBase(knowledgeClient, domain_id);
 
     const system = `You are a professional data analytics and reporting assistant for the "${domainName}" domain of a pediatric hospital.
 Your task is to transform raw data into a clean, polished, decision-ready response.
