@@ -611,7 +611,10 @@ const AdminUsers = () => {
                     <Input
                       type={resetPwShow ? "text" : "password"}
                       value={resetPwValue}
-                      onChange={(e) => setResetPwValue(e.target.value)}
+                      onChange={(e) => {
+                        setResetPwValue(e.target.value);
+                        if (resetPwError) setResetPwError(null);
+                      }}
                       placeholder="Enter new password"
                       className="pr-10"
                     />
@@ -625,21 +628,40 @@ const AdminUsers = () => {
                       {resetPwShow ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </Button>
                   </div>
+                  {resetPwError ? <p className="text-xs text-destructive">{resetPwError}</p> : null}
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => { setResetPwOpen(false); setResetPwValue(""); setResetPwShow(false); }}
+                      onClick={() => { setResetPwOpen(false); setResetPwValue(""); setResetPwShow(false); setResetPwError(null); }}
                     >
                       Cancel
                     </Button>
                     <Button
                       size="sm"
-                      disabled={!resetPwValue.trim() || resetPwSaving}
+                      disabled={!resetPwValue.trim() || resetPwSaving || resetPwChecking}
                       onClick={async () => {
                         if (!editUser || !resetPwValue.trim()) return;
+                        setResetPwError(null);
                         setResetPwSaving(true);
                         try {
+                          setResetPwChecking(true);
+                          const leakedCheck = await checkLeakedPassword(resetPwValue);
+                          setResetPwChecking(false);
+
+                          if (leakedCheck.error) {
+                            setResetPwError(leakedCheck.error);
+                            toast({ title: "Password check failed", description: leakedCheck.error, variant: "destructive" });
+                            return;
+                          }
+
+                          if (leakedCheck.isLeaked) {
+                            const leakDescription = `This password appears in ${leakedCheck.leakCount.toLocaleString()} known breach records. Please choose a different password.`;
+                            setResetPwError(leakDescription);
+                            toast({ title: "Leaked password detected", description: leakDescription, variant: "destructive" });
+                            return;
+                          }
+
                           const { data: sessionData } = await supabase.auth.getSession();
                           const token = sessionData.session?.access_token;
                           const res = await fetch(
@@ -660,14 +682,16 @@ const AdminUsers = () => {
                           setResetPwOpen(false);
                           setResetPwValue("");
                           setResetPwShow(false);
+                          setResetPwError(null);
                         } catch (err: any) {
                           toast({ title: "Error", description: err.message, variant: "destructive" });
                         } finally {
+                          setResetPwChecking(false);
                           setResetPwSaving(false);
                         }
                       }}
                     >
-                      {resetPwSaving ? "Resetting..." : "Confirm Reset"}
+                      {resetPwSaving ? "Resetting..." : resetPwChecking ? "Checking password..." : "Confirm Reset"}
                     </Button>
                   </div>
                 </div>
@@ -761,7 +785,10 @@ const AdminUsers = () => {
                 <Input
                   type={createShowPw ? "text" : "password"}
                   value={createPassword}
-                  onChange={(e) => setCreatePassword(e.target.value)}
+                  onChange={(e) => {
+                    setCreatePassword(e.target.value);
+                    if (createPwError) setCreatePwError(null);
+                  }}
                   className="pr-20"
                 />
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
@@ -788,6 +815,7 @@ const AdminUsers = () => {
                   </Button>
                 </div>
               </div>
+              {createPwError ? <p className="text-xs text-destructive">{createPwError}</p> : null}
               <p className="text-[11px] text-muted-foreground">User should change this password after first login.</p>
             </div>
 
@@ -836,8 +864,8 @@ const AdminUsers = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateUser} disabled={createSaving || !createEmail.trim() || !createPassword.trim()}>
-              {createSaving ? "Creating..." : "Create User"}
+            <Button onClick={handleCreateUser} disabled={createSaving || createPwChecking || !createEmail.trim() || !createPassword.trim()}>
+              {createSaving ? "Creating..." : createPwChecking ? "Checking password..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
