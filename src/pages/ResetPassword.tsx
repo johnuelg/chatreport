@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { checkLeakedPassword } from "@/lib/password-security";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingPassword, setCheckingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -23,8 +26,27 @@ const ResetPassword = () => {
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
     setLoading(true);
+
     try {
+      setCheckingPassword(true);
+      const leakedCheck = await checkLeakedPassword(password);
+      setCheckingPassword(false);
+
+      if (leakedCheck.error) {
+        setPasswordError(leakedCheck.error);
+        toast({ title: "Password check failed", description: leakedCheck.error, variant: "destructive" });
+        return;
+      }
+
+      if (leakedCheck.isLeaked) {
+        const leakDescription = `This password appears in ${leakedCheck.leakCount.toLocaleString()} known breach records. Please choose a different password.`;
+        setPasswordError(leakDescription);
+        toast({ title: "Leaked password detected", description: leakDescription, variant: "destructive" });
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast({ title: "Password updated!", description: "You can now sign in with your new password." });
@@ -32,6 +54,7 @@ const ResetPassword = () => {
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
+      setCheckingPassword(false);
       setLoading(false);
     }
   };
@@ -53,9 +76,12 @@ const ResetPassword = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter new password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="bg-secondary/50 border-border pr-10"
                 />
                 <button
@@ -66,9 +92,10 @@ const ResetPassword = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {passwordError ? <p className="text-xs text-destructive">{passwordError}</p> : null}
             </div>
-            <Button type="submit" variant="hero" className="w-full rounded-xl" disabled={loading}>
-              {loading ? "Updating..." : "Update Password"}
+            <Button type="submit" variant="hero" className="w-full rounded-xl" disabled={loading || checkingPassword}>
+              {loading ? "Updating..." : checkingPassword ? "Checking password..." : "Update Password"}
             </Button>
           </form>
         </div>
