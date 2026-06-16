@@ -163,6 +163,48 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (domain_id !== null && typeof domain_id !== "string") {
+      return new Response(JSON.stringify({ error: "domain_id must be a string or null" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: isAdmin, error: isAdminError } = await userClient.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+
+    if (isAdminError) {
+      return new Response(JSON.stringify({ error: "Failed to verify role", detail: isAdminError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (domain_id && !isAdmin) {
+      const { data: domainAccess, error: domainAccessError } = await userClient
+        .from("user_domains")
+        .select("domain_id")
+        .eq("user_id", user.id)
+        .eq("domain_id", domain_id)
+        .maybeSingle();
+
+      if (domainAccessError) {
+        return new Response(JSON.stringify({ error: "Failed to verify domain access", detail: domainAccessError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!domainAccess) {
+        return new Response(JSON.stringify({ error: "Forbidden: domain access denied" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const adminClient = createClient(supabaseUrl, serviceKey);
 
     // Domain name + KB

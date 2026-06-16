@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, Eye, FileText, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import type { Document } from "@/hooks/useDocuments";
 
 function formatFileSize(bytes: number) {
@@ -30,15 +31,31 @@ interface Props {
 const VersionHistoryDialog = ({ open, onOpenChange, versions, fileName }: Props) => {
   const sorted = [...versions].sort((a, b) => (b as any).version - (a as any).version);
 
-  const handlePreview = (doc: Document) => {
-    const { data } = supabase.storage.from("documents").getPublicUrl(doc.file_path);
-    window.open(data.publicUrl, "_blank");
+  const handlePreview = async (doc: Document) => {
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(doc.file_path, 60);
+
+    if (error || !data?.signedUrl) {
+      toast({ title: "Preview failed", description: error?.message ?? "Could not generate secure preview link", variant: "destructive" });
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleDownload = (doc: Document) => {
-    const { data } = supabase.storage.from("documents").getPublicUrl(doc.file_path);
+  const handleDownload = async (doc: Document) => {
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(doc.file_path, 60);
+
+    if (error || !data?.signedUrl) {
+      toast({ title: "Download failed", description: error?.message ?? "Could not generate secure download link", variant: "destructive" });
+      return;
+    }
+
     const a = document.createElement("a");
-    a.href = data.publicUrl;
+    a.href = data.signedUrl;
     a.download = doc.file_name;
     a.click();
   };
