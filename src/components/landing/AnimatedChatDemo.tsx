@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { User, Bot, Sparkles, Send, Stethoscope } from "lucide-react";
+import { User, Bot, Send, Stethoscope } from "lucide-react";
 
 interface ChatMessage {
+  id: string;
   role: "user" | "assistant";
-  content: string | React.ReactNode;
+  type: "text" | "kpi";
+  content?: string;
+}
+
+interface KpiLine {
+  label: string;
+  value: string;
+  valueClassName?: string;
 }
 
 const AnimatedChatDemo = () => {
@@ -12,116 +20,139 @@ const AnimatedChatDemo = () => {
   const [isTypingInInput, setIsTypingInInput] = useState(false);
   const [isTypingBot, setIsTypingBot] = useState(false);
   const [showSendButton, setShowSendButton] = useState(false);
+  const [typedKpiValues, setTypedKpiValues] = useState<string[]>([]);
+  const [typedInsight, setTypedInsight] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const userMessage = "Review the current KPI performance for Emergency Department (ED) for April 2025";
 
-  const botResponseLines = [
-    { label: "Patient Visits", value: "7,450", color: "text-foreground" },
-    { label: "Door to Doctor", value: "5 min", color: "text-sky-500 font-bold" },
-    { label: "Doctor to Decision", value: "6 min", color: "text-sky-500 font-bold" },
-    { label: "Decision to Disposition", value: "0:45 min", color: "text-green-500 font-bold" },
-    { label: "Urgent", value: "51%", color: "text-foreground" },
-    { label: "Non-Urgent", value: "49%", color: "text-foreground" },
-    { label: "Door to Disposition", value: "99%", color: "text-sky-500 font-bold" },
-    { label: "DAMA", value: "35 (0.5%)", color: "text-foreground" },
-    { label: "Mortality Rate", value: "0.03% (2 patients)", color: "text-foreground" },
+  const botResponseLines: KpiLine[] = [
+    { label: "Patient Visits", value: "7,450" },
+    { label: "Door to Doctor", value: "5 min", valueClassName: "text-sky-500 font-bold" },
+    { label: "Doctor to Decision", value: "6 min", valueClassName: "text-sky-500 font-bold" },
+    { label: "Decision to Disposition", value: "0:45 min", valueClassName: "text-green-500 font-bold" },
+    { label: "Urgency Mix", value: "51% Urgent | 49% Non-Urgent" },
+    { label: "Door to Layout", value: "99%", valueClassName: "text-sky-500 font-bold" },
+    { label: "DAMA", value: "35 (0.5%)" },
+    { label: "Mortality Rate", value: "0.03% (2 patients)" },
   ];
 
   const insightText = "💡 Key Findings: ED efficiency is 12% above target. Door-to-doctor times show excellent triage performance. Consider minor workflow adjustments for disposition delays.";
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
         top: chatContainerRef.current.scrollHeight,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
-  }, [messages, isTypingBot]);
+  }, [messages, isTypingBot, inputText, typedKpiValues, typedInsight]);
 
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const randomBetween = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-  const typeInInput = async (text: string) => {
+  const typeInInput = async (text: string, shouldStop: () => boolean) => {
     setIsTypingInInput(true);
     for (let i = 0; i <= text.length; i++) {
+      if (shouldStop()) return;
       setInputText(text.substring(0, i));
-      // Realistic typing speed: 50-100ms with slight randomness
       await delay(60 + Math.random() * 40);
     }
     setIsTypingInInput(false);
     setShowSendButton(true);
   };
 
-  // Animation sequence
   useEffect(() => {
+    let cancelled = false;
+
+    const shouldStop = () => cancelled;
+
+    const typeUserMessageInBubble = async (messageId: string, text: string) => {
+      for (let i = 0; i <= text.length; i++) {
+        if (shouldStop()) return;
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId ? { ...message, content: text.substring(0, i) } : message,
+          ),
+        );
+        await delay(randomBetween(14, 28));
+      }
+    };
+
+    const typeAssistantKpiMessage = async () => {
+      setTypedKpiValues(Array(botResponseLines.length).fill(""));
+      for (let rowIndex = 0; rowIndex < botResponseLines.length; rowIndex++) {
+        const row = botResponseLines[rowIndex];
+        for (let charIndex = 0; charIndex <= row.value.length; charIndex++) {
+          if (shouldStop()) return;
+          setTypedKpiValues((prev) => {
+            const next = [...prev];
+            next[rowIndex] = row.value.substring(0, charIndex);
+            return next;
+          });
+          await delay(randomBetween(18, 34));
+        }
+        await delay(130);
+      }
+
+      setTypedInsight("");
+      for (let i = 0; i <= insightText.length; i++) {
+        if (shouldStop()) return;
+        setTypedInsight(insightText.substring(0, i));
+        await delay(randomBetween(12, 26));
+      }
+    };
+
     const runAnimation = async () => {
-      // Reset state
-      setMessages([]);
-      setInputText("");
-      setShowSendButton(false);
-      setIsTypingBot(false);
+      while (!shouldStop()) {
+        setMessages([]);
+        setInputText("");
+        setShowSendButton(false);
+        setIsTypingBot(false);
+        setTypedKpiValues([]);
+        setTypedInsight("");
 
-      // Step 1: Wait initial delay
-      await delay(1500);
+        await delay(1100);
+        if (shouldStop()) return;
 
-      // Step 2: Type in the input textbox (character by character)
-      await typeInInput(userMessage);
-      
-      // Step 3: Brief pause showing "send" ready state
-      await delay(800);
-      
-      // Step 4: "Send" the message - clear input and add to messages with animation
-      setInputText("");
-      setShowSendButton(false);
-      setMessages([{ role: "user", content: userMessage }]);
-      
-      // Step 5: Show bot typing indicator after a realistic delay
-      await delay(1000);
-      setIsTypingBot(true);
-      
-      // Step 6: Bot "typing" for realistic duration
-      await delay(2000);
-      setIsTypingBot(false);
+        await typeInInput(userMessage, shouldStop);
+        if (shouldStop()) return;
 
-      // Step 7: Show bot response with KPI data
-      const botContent = (
-        <div className="space-y-2">
-          {botResponseLines.map((line, index) => (
-            <div 
-              key={index} 
-              className="flex items-center gap-2 opacity-0 animate-[fade-in_0.3s_ease-out_forwards]" 
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              <span className="text-muted-foreground">{line.label}:</span>
-              <span className={line.color}>{line.value}</span>
-            </div>
-          ))}
-          <div 
-            className="mt-4 pt-3 border-t border-border/50 opacity-0 animate-[fade-in_0.3s_ease-out_forwards]" 
-            style={{ animationDelay: "1200ms" }}
-          >
-            <p className="text-sm text-muted-foreground italic leading-relaxed">{insightText}</p>
-          </div>
-        </div>
-      );
+        await delay(700);
+        if (shouldStop()) return;
 
-      setMessages(prev => [...prev, { role: "assistant", content: botContent }]);
+        const userMessageId = `user-${Date.now()}`;
+        setInputText("");
+        setShowSendButton(false);
+        setMessages([{ id: userMessageId, role: "user", type: "text", content: "" }]);
+        await typeUserMessageInBubble(userMessageId, userMessage);
+        if (shouldStop()) return;
 
-      // Wait and restart animation
-      await delay(10000);
-      runAnimation();
+        await delay(randomBetween(1000, 2000));
+        if (shouldStop()) return;
+
+        setIsTypingBot(true);
+        await delay(randomBetween(1100, 1900));
+        if (shouldStop()) return;
+
+        setIsTypingBot(false);
+        setMessages((prev) => [...prev, { id: `assistant-${Date.now()}`, role: "assistant", type: "kpi" }]);
+        await typeAssistantKpiMessage();
+        if (shouldStop()) return;
+
+        await delay(9000);
+      }
     };
 
     runAnimation();
 
     return () => {
-      // Cleanup handled by component unmount
+      cancelled = true;
     };
   }, []);
 
   return (
-    <div className="relative max-w-2xl mx-auto">
+    <div className="relative max-w-2xl mx-auto animate-[chat-float_6s_ease-in-out_infinite]">
       {/* Chat Container */}
       <div className="bg-card rounded-2xl shadow-elegant border border-border/50 overflow-hidden">
         {/* Chat Header */}
@@ -143,9 +174,9 @@ const AnimatedChatDemo = () => {
           className="p-4 md:p-6 space-y-4 min-h-[280px] max-h-[350px] overflow-y-auto scroll-smooth"
         >
           {/* Rendered messages with slide-up animation */}
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <div 
-              key={index} 
+              key={message.id}
               className={`flex items-start gap-3 opacity-0 translate-y-4 animate-[slide-fade-in_0.4s_ease-out_forwards] ${
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}
@@ -166,7 +197,32 @@ const AnimatedChatDemo = () => {
                 {typeof message.content === "string" ? (
                   <p className="text-sm leading-relaxed text-left">{message.content}</p>
                 ) : (
-                  <div className="text-sm">{message.content}</div>
+                  <div className="text-sm">
+                    {message.type === "kpi" ? (
+                      <div className="space-y-2">
+                        {botResponseLines.map((line, index) => {
+                          const typedValue = typedKpiValues[index] || "";
+                          const isVisible = typedKpiValues.slice(0, index + 1).some((value) => value.length > 0);
+                          if (!isVisible) return null;
+
+                          return (
+                            <div key={line.label} className="flex items-start gap-2 leading-relaxed">
+                              <span className="text-muted-foreground shrink-0">{line.label}:</span>
+                              <span className={line.valueClassName ?? "text-foreground"}>{typedValue}</span>
+                            </div>
+                          );
+                        })}
+
+                        {(typedInsight.length > 0 || typedKpiValues.every((value, idx) => value === botResponseLines[idx]?.value)) && (
+                          <div className="mt-4 pt-3 border-t border-border/50">
+                            <p className="text-sm text-muted-foreground italic leading-relaxed">{typedInsight}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      message.content
+                    )}
+                  </div>
                 )}
               </div>
               {message.role === "user" && (
@@ -260,6 +316,14 @@ const AnimatedChatDemo = () => {
         @keyframes blink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
+        }
+        @keyframes chat-float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
         }
       `}</style>
     </div>
