@@ -213,7 +213,9 @@ const AnimatedChatDemo = () => {
                           );
                         })}
 
-                        {(typedInsight.length > 0 || typedKpiValues.every((value, idx) => value === botResponseLines[idx]?.value)) && (
+                        {(typedInsight.length > 0 ||
+                          (typedKpiValues.length === botResponseLines.length &&
+                            typedKpiValues.every((value, idx) => value === botResponseLines[idx]?.value))) && (
                           <div className="mt-4 pt-3 border-t border-border/50">
                             <p className="text-sm text-muted-foreground italic leading-relaxed">{typedInsight}</p>
                           </div>
